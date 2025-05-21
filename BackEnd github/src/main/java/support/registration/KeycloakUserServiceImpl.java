@@ -32,7 +32,6 @@ import java.util.*;
 
 @Service
 @Slf4j
-
 public class KeycloakUserServiceImpl implements KeycloakUserService {
 
     @Autowired

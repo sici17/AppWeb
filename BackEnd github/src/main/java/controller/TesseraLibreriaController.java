@@ -6,7 +6,6 @@ import entities.*;
 import jakarta.validation.Valid;
 import services.*;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,12 +18,15 @@ import java.util.List;
 public class TesseraLibreriaController {
 
     private final TesseraLibreriaService tesseraLibreriaService;
+    private final TipologiaTesseraService tipologiaTesseraService;
     private final UtenteService utenteService;
 
-    @Autowired
-    public TesseraLibreriaController(TesseraLibreriaService tesseraLibreriaService, UtenteService utenteService) {
-        this.tesseraLibreriaService = tesseraLibreriaService;
-        this.utenteService = utenteService;
+    public TesseraLibreriaController(TesseraLibreriaService tesseraLibreriaService, 
+            TipologiaTesseraService tipologiaTesseraService,
+            UtenteService utenteService) {
+     this.tesseraLibreriaService = tesseraLibreriaService;
+     this.tipologiaTesseraService = tipologiaTesseraService;
+     this.utenteService = utenteService;
     }
 
     @ExceptionHandler(TesseraNotFoundException.class)
@@ -48,6 +50,28 @@ public class TesseraLibreriaController {
             return new ResponseEntity<>("Utente non trovato", HttpStatus.NOT_FOUND);
         }
     }
+    
+    @GetMapping("/tipologie")
+    public ResponseEntity<List<TipologiaTessera>> getAllTipologie() {
+        return new ResponseEntity<>(tipologiaTesseraService.getAllTipologie(), HttpStatus.OK);
+    }
+    
+    @GetMapping("/tipologie/{id}")
+    public ResponseEntity<TipologiaTessera> getTipologiaById(@PathVariable int id) throws TipologiaNotFoundException {
+        // Implementazione mancante nel service
+        return new ResponseEntity<>(tipologiaTesseraService.getTipologiaById(id), HttpStatus.OK);
+    }
+    
+    @PreAuthorize("hasRole('admin')")
+    @PostMapping("/tipologie")
+    public ResponseEntity<?> createTipologia(@RequestBody @Valid TipologiaTessera tipologia) {
+        try {
+            return new ResponseEntity<>(tipologiaTesseraService.createTipologia(tipologia), HttpStatus.CREATED);
+        } catch (TipologiaAlreadyExistException e) {
+            return new ResponseEntity<>("Tipologia già esistente", HttpStatus.CONFLICT);
+        }
+    }
+    
 
     @PreAuthorize("hasRole('utente')")
     @GetMapping("/utente")
@@ -69,11 +93,17 @@ public class TesseraLibreriaController {
         tesseraLibreriaService.deleteTessera(id);
         return ResponseEntity.ok().build();
     }
-
     @PreAuthorize("hasRole('admin')")
     @GetMapping
-    public List<TesseraLibreria> getAllTessere() {
-        return tesseraLibreriaService.getAllTessere();
+    public ResponseEntity<?> getAllTessere() {
+        try {
+            List<TesseraLibreria> tessere = tesseraLibreriaService.getAllTessere();
+            return ResponseEntity.ok(tessere);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Errore durante il caricamento delle tessere: " + e.getMessage());
+        }
     }
 
     @PreAuthorize("hasRole('admin')")

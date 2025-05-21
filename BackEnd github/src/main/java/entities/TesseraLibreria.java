@@ -29,7 +29,6 @@ public class TesseraLibreria {
     @JoinColumn(name = "utente_id")
     private Utente utente;
 
-    @ManyToOne
     @JoinColumn(name = "tipologia_id")
     private TipologiaTessera tipologia;
 

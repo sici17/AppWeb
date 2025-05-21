@@ -30,7 +30,7 @@ public class UtenteService {
     }
 
     public Utente cercaUtente(int id) throws UserNotFoundException {
-        return userRepository.findById(Utils.getId()).orElseThrow(UserNotFoundException::new);
+        return userRepository.findById(id).orElseThrow(UserNotFoundException::new);
     }
 
     public Utente creaUtente(Utente utente) throws UserAlreadyExistsException{

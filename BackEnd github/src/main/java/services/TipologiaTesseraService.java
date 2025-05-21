@@ -57,4 +57,10 @@ public class TipologiaTesseraService {
         tipologia.setCostoAnnuale(dettagli.getCostoAnnuale());
         tipologiaTesseraRepository.save(tipologia);
     }
+    
+    @Transactional(readOnly = true)
+    public TipologiaTessera getTipologiaById(int id) throws TipologiaNotFoundException {
+        return tipologiaTesseraRepository.findById(id)
+                .orElseThrow(TipologiaNotFoundException::new);
+    }
 }

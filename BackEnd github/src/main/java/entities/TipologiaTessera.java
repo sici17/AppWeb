@@ -1,6 +1,8 @@
 package entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
+
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,27 +42,27 @@ public class TipologiaTessera {
 
     @Basic
     @Column(name = "max_rinnovi")
-    private int maxRinnovi = 1; // numero massimo di rinnovi per prestito
+    private Integer maxRinnovi = 1; // numero massimo di rinnovi per prestito
 
     @Basic
     @Column(name = "costo_annuale")
-    private double costoAnnuale = 0.0;
+    private Double costoAnnuale = 0.0;
 
     @Basic
     @Column(name = "multa_giornaliera")
-    private double multaGiornaliera = 0.50; // multa per giorno di ritardo
+    private Double multaGiornaliera = 0.50; // multa per giorno di ritardo
 
     @Basic
     @Column(name = "max_prestiti_contemporanei")
-    private int maxPrestitiContemporanei = 3;
+    private Integer maxPrestitiContemporanei = 3;
 
     @Basic
     @Column(name = "rinnovo_automatico")
-    private boolean rinnovoAutomatico = false;
+    private Boolean rinnovoAutomatico = false;
 
     @Basic
     @Column(name = "attiva")
-    private boolean attiva = true;
+    private Boolean attiva = true;
 
     @JsonIgnore
     @OneToMany(mappedBy = "tipologia")
