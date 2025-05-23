@@ -21,7 +21,7 @@ public class ArticoloCarrello {
     private int id;
 
     @Column(name = "quantita")
-    private int quantita;
+    private int quantita=0;
 
     @ManyToOne
     @JsonIgnore
@@ -35,11 +35,11 @@ public class ArticoloCarrello {
     @Basic
     @Column(name = "in_carrello")
     @JsonIgnore
-    private boolean inCarrello;
+    private boolean inCarrello=false;
 
     @Basic
     @Column(name = "prezzo_unitario")
-    private double prezzoUnitario; // Prezzo al momento dell'aggiunta al carrello
+    private double prezzoUnitario=0; // Prezzo al momento dell'aggiunta al carrello
 
     @OneToMany
     @JsonIgnore
@@ -56,12 +56,15 @@ public class ArticoloCarrello {
 
     // Metodi di utilità
     public double getTotaleRiga() {
+        
         return quantita * prezzoUnitario;
+      
     }
 
     public boolean isDisponibile() {
-        return articolo != null && articolo.isDisponibile() && 
-               articolo.getGiacenza() >= quantita;
+       
+        return articolo != null && articolo.isDisponibile() && articolo.getGiacenza() >= quantita;
+      
     }
 
     @Override

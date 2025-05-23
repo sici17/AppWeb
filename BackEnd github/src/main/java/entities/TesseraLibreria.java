@@ -29,6 +29,7 @@ public class TesseraLibreria {
     @JoinColumn(name = "utente_id")
     private Utente utente;
 
+    @ManyToOne
     @JoinColumn(name = "tipologia_id")
     private TipologiaTessera tipologia;
 
@@ -42,7 +43,7 @@ public class TesseraLibreria {
 
     @Basic
     @Column(name = "crediti_rimanenti")
-    private int creditiRimanenti;
+    private int creditiRimanenti=0;
 
     @Basic
     @Column(name = "crediti_totali_usati")

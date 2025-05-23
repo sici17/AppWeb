@@ -43,7 +43,7 @@ public class Risorsa {
 
     @Basic
     @Column(name = "anno_pubblicazione")
-    private Integer annoPubblicazione;
+    private int annoPubblicazione=0;
 
     @Basic
     @Column(name = "collocazione", length = 20)

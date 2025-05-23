@@ -31,11 +31,11 @@ public class ArticoloOrdine {
 
     @Basic
     @Column(name = "quantita_ordinata")
-    private int quantitaOrdinata;
+    private int quantitaOrdinata=0;
 
     @Basic
     @Column(name = "prezzo_unitario_ordine")
-    private double prezzoUnitarioOrdine;
+    private double prezzoUnitarioOrdine=0.0;
 
     @Basic
     @Column(name = "sconto_riga")

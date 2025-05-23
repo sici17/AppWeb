@@ -27,8 +27,16 @@ public class UtentiController {
     }
 
     @GetMapping("/all")
-    public List<Utente> getAllUsers() {
-        return userService.cercaTutti();
+    public ResponseEntity<List<Utente>> getAllUsers() {
+        System.out.println("Controller getAllUsers chiamato!");
+        try {
+            List<Utente> users = userService.cercaTutti();
+            System.out.println("Utenti trovati: " + users.size());
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            System.out.println("Errore nel controller: " + e.getMessage());
+            throw e;
+        }
     }
 
     @GetMapping

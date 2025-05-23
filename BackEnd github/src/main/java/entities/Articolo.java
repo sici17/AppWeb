@@ -94,11 +94,11 @@ public class Articolo {
     }
 
     public boolean isDisponibile() {
-        return attivo && giacenza > 0;
+        return  giacenza > 0;
     }
 
     public boolean isInEsaurimento() {
-        return giacenza <= giacenzaMinima;
+        return  giacenza <= giacenzaMinima;
     }
 
     @Override

@@ -42,27 +42,27 @@ public class TipologiaTessera {
 
     @Basic
     @Column(name = "max_rinnovi")
-    private Integer maxRinnovi = 1; // numero massimo di rinnovi per prestito
+    private int maxRinnovi = 1; // numero massimo di rinnovi per prestito
 
     @Basic
     @Column(name = "costo_annuale")
-    private Double costoAnnuale = 0.0;
+    private double costoAnnuale = 0.0;
 
     @Basic
     @Column(name = "multa_giornaliera")
-    private Double multaGiornaliera = 0.50; // multa per giorno di ritardo
+    private double multaGiornaliera = 0.50; // multa per giorno di ritardo
 
     @Basic
     @Column(name = "max_prestiti_contemporanei")
-    private Integer maxPrestitiContemporanei = 3;
+    private double maxPrestitiContemporanei = 3;
 
     @Basic
     @Column(name = "rinnovo_automatico")
-    private Boolean rinnovoAutomatico = false;
+    private boolean rinnovoAutomatico = false;
 
     @Basic
     @Column(name = "attiva")
-    private Boolean attiva = true;
+    private boolean attiva = true;
 
     @JsonIgnore
     @OneToMany(mappedBy = "tipologia")
@@ -70,10 +70,10 @@ public class TipologiaTessera {
 
     // Metodi di utilità
     public boolean isPagamento() {
-        return costoAnnuale > 0;
+        return  costoAnnuale > 0;
     }
 
     public boolean isRinnovoConsentito() {
-        return maxRinnovi > 0;
+        return  maxRinnovi > 0;
     }
 }
