@@ -10,40 +10,44 @@ import { Subscription } from 'rxjs';
   selector: 'app-root',
   standalone: true,
   imports: [CommonModule, RouterOutlet, RouterLink],
-  template: `
-    <nav class="navbar">
-      <div class="nav-brand">
-        <a routerLink="/home">🏛️ Biblioteca Universitaria</a>
-      </div>
-      
-      <div class="nav-links">
-        <a routerLink="/home">Home</a>
-        <a routerLink="/risorse">Catalogo</a>
+  // src/app/app.component.ts - NAVBAR AGGIORNATA
+  // ... (mantieni tutto il codice esistente, solo il template cambia)
+
+    template: `
+      <nav class="navbar">
+        <div class="nav-brand">
+          <a routerLink="/home">🏛️ Biblioteca Universitaria</a>
+        </div>
         
-        @if (!currentUser) {
-          <!-- Menu per utenti non autenticati -->
-          <a routerLink="/registrazione">Registrati</a>
-          <a routerLink="/login" class="btn-login">Accedi</a>
-        } @else {
-          <!-- Menu per utenti autenticati -->
-          <a routerLink="/dashboard">Dashboard</a>
+        <div class="nav-links">
+          <a routerLink="/home">Home</a>
+          <a routerLink="/risorse">Catalogo</a>
           
-          @if (isAdmin) {
-            <a routerLink="/admin-dashboard" class="btn-admin">Admin</a>
+          @if (!currentUser) {
+            <!-- Menu per utenti non autenticati -->
+            <a routerLink="/registrazione">Registrati</a>
+            <a routerLink="/login" class="btn-login">Accedi</a>
+          } @else {
+            <!-- Menu per utenti autenticati -->
+            <a routerLink="/dashboard">Dashboard</a>
+            <a routerLink="/tessere">🎫 Tessere</a>
+            
+            @if (isAdmin) {
+              <a routerLink="/admin-dashboard" class="btn-admin">Admin</a>
+            }
+            
+            <div class="user-menu">
+              <span class="user-name">{{ currentUser.given_name || currentUser.preferred_username }}</span>
+              <button (click)="logout()" class="btn-logout">Logout</button>
+            </div>
           }
-          
-          <div class="user-menu">
-            <span class="user-name">{{ currentUser.given_name || currentUser.preferred_username }}</span>
-            <button (click)="logout()" class="btn-logout">Logout</button>
-          </div>
-        }
-      </div>
-    </nav>
-    
-    <main class="main-content">
-      <router-outlet></router-outlet>
-    </main>
-  `,
+        </div>
+      </nav>
+      
+      <main class="main-content">
+        <router-outlet></router-outlet>
+      </main>
+    `,
   styles: [`
     .navbar {
       background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);

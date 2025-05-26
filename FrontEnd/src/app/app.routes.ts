@@ -1,4 +1,4 @@
-// src/app/app.routes.ts
+// src/app/app.routes.ts - CON ROTTA TESSERE
 import { Routes } from '@angular/router';
 import { AuthGuard, AdminGuard } from './guards/auth.guard';
 
@@ -29,6 +29,11 @@ export const routes: Routes = [
     loadComponent: () => import('./components/dashboard/dashboard.component').then(m => m.DashboardComponent),
     canActivate: [AuthGuard]
   },
+  { 
+    path: 'tessere', 
+    loadComponent: () => import('./components/tessere/tessere.component').then(m => m.TessereComponent),
+    canActivate: [AuthGuard]
+  },
   {
     path: 'user-dashboard',
     loadComponent: () => import('./components/user-dashboard/user-dashboard.component').then(m => m.UserDashboardComponent),
@@ -47,12 +52,6 @@ export const routes: Routes = [
   // Rotte protette con ruoli specifici
   {
     path: 'prestiti',
-    loadComponent: () => import('./components/dashboard/dashboard.component').then(m => m.DashboardComponent),
-    canActivate: [AuthGuard],
-    data: { roles: ['utente'] }
-  },
-  {
-    path: 'tessere',
     loadComponent: () => import('./components/dashboard/dashboard.component').then(m => m.DashboardComponent),
     canActivate: [AuthGuard],
     data: { roles: ['utente'] }

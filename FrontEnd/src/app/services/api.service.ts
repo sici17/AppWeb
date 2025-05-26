@@ -185,6 +185,12 @@ export class ApiService {
   }
 
   // PRESTITI
+  
+  cancelPrestito(prestitoId: number): Observable<any> {
+      return this.http.delete(`${this.baseUrl}/api/prestiti/${prestitoId}`);
+    }
+
+  
   getUserPrestiti(): Observable<Prestito[]> {
     return this.http.get<Prestito[]>(`${this.baseUrl}/api/prestiti/utente`);
   }
@@ -237,4 +243,11 @@ export class ApiService {
   checkout(cart: any): Observable<Ordine> {
     return this.http.post<Ordine>(`${this.baseUrl}/api/cart/checkout`, cart);
   }
+  
+  
+  
+
+ 
+  
+  
 }
