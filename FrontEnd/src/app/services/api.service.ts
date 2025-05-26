@@ -1,6 +1,6 @@
 // src/app/services/api.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface Utente {
@@ -8,31 +8,84 @@ export interface Utente {
   nome: string;
   cognome: string;
   email: string;
-  sesso: string;
-  tipoUtente: string;
+  matricola?: string;
+  codiceFiscale?: string;
+  telefono?: string;
+  sesso: 'MASCHIO' | 'FEMMINA' | 'ALTRO';
+  tipoUtente: 'STUDENTE' | 'DOCENTE' | 'PERSONALE' | 'ESTERNO';
 }
 
 export interface Risorsa {
   id: number;
   titolo: string;
   autore: string;
-  isbn: string;
-  tipo: string;
-  editore: string;
+  isbn?: string;
+  tipo: 'LIBRO' | 'RIVISTA' | 'TESI' | 'POSTAZIONE_PC' | 'DVD' | 'AUDIOLIBRO' | 'EBOOK' | 'MANUALE';
+  editore?: string;
   annoPubblicazione: number;
+  collocazione?: string;
   copieDisponibili: number;
   copieTotali: number;
-  stato: string;
-  descrizione: string;
+  stato: 'DISPONIBILE' | 'PRESTITO' | 'MANUTENZIONE' | 'RITIRATO' | 'PRENOTATO';
+  descrizione?: string;
+  immagineCopertina?: string;
 }
 
 export interface TipologiaTessera {
   id: number;
   nome: string;
-  descrizione: string;
+  descrizione?: string;
   creditiMensili: number;
   durataPrestitoGiorni: number;
+  maxRinnovi: number;
   costoAnnuale: number;
+  multaGiornaliera: number;
+  maxPrestitiContemporanei: number;
+  rinnovoAutomatico: boolean;
+  attiva: boolean;
+}
+
+export interface TesseraLibreria {
+  id: number;
+  numeroTessera: string;
+  utente: Utente;
+  tipologia: TipologiaTessera;
+  dataEmissione: string;
+  dataScadenza: string;
+  creditiRimanenti: number;
+  creditiTotaliUsati: number;
+  stato: 'ATTIVA' | 'SCADUTA' | 'SOSPESA' | 'REVOCATA' | 'BLOCCATA';
+  rinnovoAutomatico: boolean;
+}
+
+export interface Prestito {
+  id: number;
+  utente: Utente;
+  risorsa: Risorsa;
+  dataInizio: string;
+  dataScadenza: string;
+  dataRestituzione?: string;
+  stato: 'ATTIVO' | 'RESTITUITO' | 'SCADUTO' | 'RINNOVATO' | 'SMARRITO' | 'DANNEGGIATO';
+  multa: number;
+  rinnovato: boolean;
+  numeroRinnovi: number;
+  note?: string;
+}
+
+export interface Ordine {
+  id: number;
+  numeroOrdine: string;
+  dataCreazione: string;
+  dataConsegnaPrevista?: string;
+  dataConsegnaEffettiva?: string;
+  prezzoTotale: number;
+  scontoApplicato: number;
+  iva: number;
+  statoOrdine: 'CREATO' | 'CONFERMATO' | 'IN_PREPARAZIONE' | 'SPEDITO' | 'CONSEGNATO' | 'ANNULLATO' | 'RIMBORSATO';
+  modalitaPagamento?: 'CONTANTI' | 'CARTA_CREDITO' | 'BONIFICO' | 'PAYPAL' | 'CREDITO_UNIVERSITARIO';
+  note?: string;
+  utente: Utente;
+  articoli: any[];
 }
 
 export interface RegistrationData {
@@ -41,7 +94,7 @@ export interface RegistrationData {
   firstName: string;
   lastName: string;
   password: string;
-  sesso: string;
+  sesso: 'MASCHIO' | 'FEMMINA' | 'ALTRO';
   id: number;
 }
 
@@ -50,36 +103,11 @@ export interface RegistrationData {
 })
 export class ApiService {
   private baseUrl = 'http://localhost:8081';
-  private jwtToken: string | null = null;
 
-  constructor(private http: HttpClient) {
-    this.jwtToken = localStorage.getItem('access_token'); // Cambiato da jwt_token
-  }
+  constructor(private http: HttpClient) {}
 
-  private getHeaders(): HttpHeaders {
-    let headers = new HttpHeaders({
-      'Content-Type': 'application/json'
-    });
-    
-    // Prendi sempre il token più recente dal localStorage
-    const currentToken = localStorage.getItem('access_token');
-    if (currentToken) {
-      headers = headers.set('Authorization', `Bearer ${currentToken}`);
-    }
-    
-    return headers;
-  }
-
-  setToken(token: string): void {
-    this.jwtToken = token;
-    localStorage.setItem('access_token', token); // Cambiato da jwt_token
-  }
-
-  clearToken(): void {
-    this.jwtToken = null;
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-  }
+  // L'interceptor gestirà automaticamente l'aggiunta del token
+  // Non abbiamo più bisogno di getHeaders() privato
 
   // UTENTI
   getAllUsers(): Observable<Utente[]> {
@@ -87,15 +115,11 @@ export class ApiService {
   }
 
   getCurrentUser(): Observable<Utente> {
-    return this.http.get<Utente>(`${this.baseUrl}/api/utenti`, {
-      headers: this.getHeaders()
-    });
+    return this.http.get<Utente>(`${this.baseUrl}/api/utenti`);
   }
 
   getUserCredits(): Observable<number> {
-    return this.http.get<number>(`${this.baseUrl}/api/utenti/crediti`, {
-      headers: this.getHeaders()
-    });
+    return this.http.get<number>(`${this.baseUrl}/api/utenti/crediti`);
   }
 
   registerUser(userData: RegistrationData): Observable<any> {
@@ -112,13 +136,20 @@ export class ApiService {
   }
 
   searchRisorseByTitle(titolo: string): Observable<Risorsa[]> {
-    return this.http.get<Risorsa[]>(`${this.baseUrl}/api/risorse/search?titolo=${titolo}`);
+    const params = new HttpParams().set('titolo', titolo);
+    return this.http.get<Risorsa[]>(`${this.baseUrl}/api/risorse/search`, { params });
   }
 
   createRisorsa(risorsa: Partial<Risorsa>): Observable<Risorsa> {
-    return this.http.post<Risorsa>(`${this.baseUrl}/api/risorse`, risorsa, {
-      headers: this.getHeaders()
-    });
+    return this.http.post<Risorsa>(`${this.baseUrl}/api/risorse`, risorsa);
+  }
+
+  updateRisorsa(id: number, risorsa: Partial<Risorsa>): Observable<string> {
+    return this.http.put<string>(`${this.baseUrl}/api/risorse/${id}`, risorsa);
+  }
+
+  deleteRisorsa(id: number): Observable<string> {
+    return this.http.delete<string>(`${this.baseUrl}/api/risorse/${id}`);
   }
 
   // TIPOLOGIE TESSERA
@@ -126,56 +157,84 @@ export class ApiService {
     return this.http.get<TipologiaTessera[]>(`${this.baseUrl}/api/tessere/tipologie`);
   }
 
+  getTipologiaById(id: number): Observable<TipologiaTessera> {
+    return this.http.get<TipologiaTessera>(`${this.baseUrl}/api/tessere/tipologie/${id}`);
+  }
+
   createTipologia(tipologia: Partial<TipologiaTessera>): Observable<TipologiaTessera> {
-    return this.http.post<TipologiaTessera>(`${this.baseUrl}/api/tessere/tipologie`, tipologia, {
-      headers: this.getHeaders()
-    });
+    return this.http.post<TipologiaTessera>(`${this.baseUrl}/api/tessere/tipologie`, tipologia);
   }
 
   // TESSERE UTENTE
-  getUserTessere(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/api/tessere/utente`, {
-      headers: this.getHeaders()
-    });
+  getUserTessere(): Observable<TesseraLibreria[]> {
+    return this.http.get<TesseraLibreria[]>(`${this.baseUrl}/api/tessere/utente`);
   }
 
-  createTessera(tipologiaId: number): Observable<any> {
-    return this.http.post(`${this.baseUrl}/api/tessere`, 
-      { tipologia: { id: tipologiaId } }, 
-      { headers: this.getHeaders() }
+  getUserTessereWithCredits(): Observable<TesseraLibreria[]> {
+    return this.http.get<TesseraLibreria[]>(`${this.baseUrl}/api/tessere/utente/concrediti`);
+  }
+
+  createTessera(tipologiaId: number): Observable<TesseraLibreria> {
+    return this.http.post<TesseraLibreria>(`${this.baseUrl}/api/tessere`, 
+      { tipologia: { id: tipologiaId } }
     );
   }
 
-  // PRESTITI
-  getUserPrestiti(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/api/prestiti/utente`, {
-      headers: this.getHeaders()
-    });
+  deleteTessera(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/api/tessere/${id}`);
   }
 
-  createPrestito(risorsaId: number, dataInizio: string, dataScadenza: string): Observable<any> {
-    const prestito = {
-      risorsa: { id: risorsaId },
-      dataInizio: dataInizio,
-      dataScadenza: dataScadenza,
-      stato: 'ATTIVO'
-    };
-    
-    return this.http.post(`${this.baseUrl}/api/prestiti`, prestito, {
-      headers: this.getHeaders()
-    });
+  // PRESTITI
+  getUserPrestiti(): Observable<Prestito[]> {
+    return this.http.get<Prestito[]>(`${this.baseUrl}/api/prestiti/utente`);
+  }
+
+  getUserPrestitiFuturi(): Observable<Prestito[]> {
+    return this.http.get<Prestito[]>(`${this.baseUrl}/api/prestiti/utente/future`);
+  }
+
+  getAllPrestiti(): Observable<Prestito[]> {
+    return this.http.get<Prestito[]>(`${this.baseUrl}/api/prestiti`);
+  }
+
+  createPrestito(prestito: Partial<Prestito>): Observable<Prestito> {
+    return this.http.post<Prestito>(`${this.baseUrl}/api/prestiti`, prestito);
   }
 
   // ORDINI
-  getAllOrdini(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/api/ordini`, {
-      headers: this.getHeaders()
-    });
+  getAllOrdini(): Observable<Ordine[]> {
+    return this.http.get<Ordine[]>(`${this.baseUrl}/api/ordini`);
   }
 
-  getUserOrdini(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/api/ordini/ordiniUtente`, {
-      headers: this.getHeaders()
-    });
+  getUserOrdini(): Observable<Ordine[]> {
+    return this.http.get<Ordine[]>(`${this.baseUrl}/api/ordini/ordiniUtente`);
+  }
+
+  getOrdiniByDateRange(inizio: string, fine: string): Observable<Ordine[]> {
+    const params = new HttpParams()
+      .set('inizio', inizio)
+      .set('fine', fine);
+    return this.http.get<Ordine[]>(`${this.baseUrl}/api/ordini/data`, { params });
+  }
+
+  deleteOrdine(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/api/ordini/${id}`);
+  }
+
+  // CARRELLO
+  getCart(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/api/cart`);
+  }
+
+  addToCart(articoloCarrello: { quantita: number; idArticolo: number }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/api/cart/add`, articoloCarrello);
+  }
+
+  removeFromCart(articoloCarrello: { quantita: number; idArticolo: number }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/api/cart/remove`, articoloCarrello);
+  }
+
+  checkout(cart: any): Observable<Ordine> {
+    return this.http.post<Ordine>(`${this.baseUrl}/api/cart/checkout`, cart);
   }
 }
