@@ -1,4 +1,3 @@
-// src/app/app.routes.ts - VERSIONE CORRETTA
 import { Routes } from '@angular/router';
 import { AuthGuard, AdminGuard } from './guards/auth.guard';
 

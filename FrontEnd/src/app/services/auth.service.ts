@@ -1,4 +1,3 @@
-// src/app/services/auth.service.ts - VERSIONE FINALE CON SERVICE ACCOUNT
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
@@ -8,6 +7,32 @@ import { catchError, map, tap, switchMap } from 'rxjs/operators';
 export interface LoginCredentials {
   username: string;
   password: string;
+}
+
+
+export interface JWTPayload {
+  sub: string;
+  preferred_username?: string;
+  email?: string;
+  name?: string;
+  given_name?: string;
+  family_name?: string;
+  azp?: string;           // Authorized party (client ID)
+  client_id?: string;     // Client ID alternativo
+  iss: string;            // Issuer
+  aud: string | string[]; // Audience
+  exp: number;            // Expiration time
+  iat: number;            // Issued at
+  realm_access?: {
+    roles: string[];
+  };
+  resource_access?: {
+    [key: string]: {
+      roles: string[];
+    };
+  };
+  scope?: string;
+  typ?: string;
 }
 
 export interface KeycloakTokenResponse {
@@ -44,12 +69,12 @@ export interface RegistrationData {
 export class AuthService {
   private keycloakUrl = 'http://localhost:8080';
   
-  // 👥 CONFIGURAZIONE PER LOGIN UTENTI (realm biblioteca)
+  //  CONFIGURAZIONE PER LOGIN UTENTI (realm biblioteca)
   private userRealm = 'biblioteca';
   private userClientId = 'biblioteca-client';
   private userClientSecret = 'hQtzUtWZnQxmjK5MGjLS7iPPj3x4xPam';
   
-  // 🔧 CONFIGURAZIONE PER ADMIN API (usa service account dello stesso realm)
+  // CONFIGURAZIONE PER ADMIN API (usa service account dello stesso realm)
   private adminRealm = 'biblioteca';
   private adminClientId = 'biblioteca-client';
   private adminClientSecret = 'hQtzUtWZnQxmjK5MGjLS7iPPj3x4xPam';
@@ -70,7 +95,7 @@ export class AuthService {
     }
   }
 
-  // 👤 LOGIN UTENTE (usa realm biblioteca)
+  //  LOGIN UTENTE 
   login(credentials: LoginCredentials): Observable<boolean> {
     const tokenUrl = `${this.keycloakUrl}/realms/${this.userRealm}/protocol/openid-connect/token`;
     
@@ -114,11 +139,11 @@ export class AuthService {
       );
   }
 
-  // 📝 REGISTRAZIONE UTENTE IN KEYCLOAK CON SERVICE ACCOUNT
-  registerUserInKeycloak(userData: RegistrationData): Observable<boolean> {
+  // REGISTRAZIONE UTENTE IN KEYCLOAK CON SERVICE ACCOUNT
+    registerUserInKeycloak(userData: RegistrationData): Observable<boolean> {
     console.log('📝 === INIZIO REGISTRAZIONE KEYCLOAK (SERVICE ACCOUNT) ===');
     console.log('Dati utente:', userData);
-    
+	
     return this.getAdminToken().pipe(
       switchMap((adminToken: string) => {
         console.log('🔑 Token service account ottenuto, procedo con creazione utente...');
@@ -216,7 +241,7 @@ export class AuthService {
     );
   }
 
-  // 🔑 TOKEN ADMIN (usa service account del realm biblioteca)
+  //  TOKEN ADMIN (usa service account del realm biblioteca)
   private getAdminToken(): Observable<string> {
     const tokenUrl = `${this.keycloakUrl}/realms/${this.adminRealm}/protocol/openid-connect/token`;
     
@@ -262,7 +287,7 @@ export class AuthService {
       );
   }
 
-  // 👑 ASSEGNAZIONE RUOLO (nel realm biblioteca)
+  // ASSEGNAZIONE RUOLO (nel realm biblioteca)
   private assignRoleToUser(adminToken: string, userId: string, roleName: string): Observable<any> {
     console.log(`👑 Assegnazione ruolo '${roleName}' all'utente ${userId}`);
     
@@ -483,4 +508,147 @@ export class AuthService {
         })
       );
   }
+  
+  
+  
+  
+  public async testIfBibliotecaClientRolesWork(): Promise<void> {
+    console.log('🧪 === TEST: FUNZIONANO I RUOLI BIBLIOTECA-CLIENT? ===');
+    
+    try {
+      // 1. Ottieni il token (che ha i ruoli in biblioteca-client)
+      const adminToken = await this.getAdminToken().toPromise();
+      
+      if (!adminToken) {
+        console.error('❌ Token non ottenuto');
+        return;
+      }
+      
+      console.log('✅ Token ottenuto');
+      
+      // 2. Test più semplice: prova a leggere le info del realm
+      console.log('🔍 Test 1: Lettura info realm...');
+      const realmInfoUrl = `${this.keycloakUrl}/admin/realms/${this.userRealm}`;
+      
+      const realmResponse = await fetch(realmInfoUrl, {
+        headers: { 
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('📊 Realm info status:', realmResponse.status);
+      
+      if (realmResponse.status === 200) {
+        console.log('✅ Può leggere info realm');
+      } else if (realmResponse.status === 403) {
+        console.error('❌ Non può leggere info realm - problema permessi');
+      }
+      
+      // 3. Test intermedio: prova a leggere gli utenti
+      console.log('🔍 Test 2: Lettura utenti...');
+      const usersUrl = `${this.keycloakUrl}/admin/realms/${this.userRealm}/users?max=1`;
+      
+      const usersResponse = await fetch(usersUrl, {
+        headers: { 
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('📊 Users list status:', usersResponse.status);
+      
+      if (usersResponse.status === 200) {
+        console.log('✅ Può leggere lista utenti');
+        const users = await usersResponse.json();
+        console.log('👥 Numero utenti:', users.length);
+      } else if (usersResponse.status === 403) {
+        console.error('❌ Non può leggere utenti - problema permessi');
+        const errorText = await usersResponse.text();
+        console.error('Dettaglio errore:', errorText);
+      }
+      
+      // 4. Test finale: prova a creare un utente semplice
+      console.log('🔍 Test 3: Creazione utente test...');
+      const createUserUrl = `${this.keycloakUrl}/admin/realms/${this.userRealm}/users`;
+      
+      const testUser = {
+        username: `test-${Date.now()}`,
+        email: `test-${Date.now()}@example.com`,
+        firstName: 'Test',
+        lastName: 'User',
+        enabled: true,
+        emailVerified: true,
+        credentials: [{
+          type: 'password',
+          value: 'test123',
+          temporary: false
+        }]
+      };
+      
+      const createResponse = await fetch(createUserUrl, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(testUser)
+      });
+      
+      console.log('📊 Create user status:', createResponse.status);
+      
+      if (createResponse.status === 201) {
+        console.log('🎉 SUCCESS! I ruoli in biblioteca-client FUNZIONANO!');
+        console.log('✅ Keycloak accetta i ruoli da biblioteca-client');
+        
+        const locationHeader = createResponse.headers.get('Location');
+        if (locationHeader) {
+          console.log('📍 Utente creato:', locationHeader);
+        }
+      } else if (createResponse.status === 403) {
+        console.error('❌ FALLIMENTO! I ruoli in biblioteca-client NON funzionano');
+        console.error('🔧 Devi spostare i ruoli a realm-management');
+        
+        const errorText = await createResponse.text();
+        console.error('Dettaglio errore 403:', errorText);
+      } else {
+        console.log('⚠️ Status inaspettato:', createResponse.status);
+        const responseText = await createResponse.text();
+        console.log('Response:', responseText);
+      }
+      
+      // 5. Conclusioni
+      console.log('🎯 === CONCLUSIONI TEST ===');
+      if (createResponse.status === 201) {
+        console.log('✅ I tuoi ruoli biblioteca-client funzionano!');
+        console.log('🔧 Il problema era solo nel debug code');
+      } else {
+        console.log('❌ I ruoli biblioteca-client non funzionano');
+        console.log('🔧 Devi spostarli a realm-management');
+      }
+      
+    } catch (error) {
+      console.error('❌ Errore nel test:', error);
+    }
+  }
+
+  // 🔧 Versione semplificata per test rapido
+  public async quickTest(): Promise<boolean> {
+    try {
+      const token = await this.getAdminToken().toPromise();
+      if (!token) return false;
+      
+      const response = await fetch(`${this.keycloakUrl}/admin/realms/${this.userRealm}/users?max=1`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      console.log('🧪 Quick test result:', response.status);
+      return response.status === 200;
+      
+    } catch (error) {
+      console.error('Quick test error:', error);
+      return false;
+    }
+  }
+  
 }

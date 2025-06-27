@@ -1,4 +1,3 @@
-// src/app/components/registration/registration.component.ts - VERSIONE SEMPLICE
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -36,6 +35,30 @@ import { AuthService } from '../../services/auth.service';
             Nome richiesto
           </div>
         </div>
+		
+		
+		
+		
+		<div style="margin: 20px; padding: 10px; border: 2px dashed #007bff; background: #f8f9fa;">
+		  <h4>🧪 Test Debug (rimuovi dopo)</h4>
+		  <button 
+		    type="button" 
+		    class="btn btn-info" 
+		    (click)="testRoles()">
+		    🧪 Test Ruoli Completo
+		  </button>
+		  
+		  <button 
+		    type="button" 
+		    class="btn btn-secondary ml-2" 
+		    (click)="quickTestRoles()">
+		    ⚡ Test Rapido
+		  </button>
+		</div>
+		
+		
+		
+		
 
         <div class="field">
           <label>Cognome:</label>
@@ -245,4 +268,23 @@ export class RegistrationComponent {
   goToLogin(): void {
     this.router.navigate(['/login']);
   }
+  
+  
+  
+  
+  async testRoles(): Promise<void> {
+     console.log('🚀 Avvio test ruoli Keycloak...');
+     await this.authService.testIfBibliotecaClientRolesWork();
+   }
+   
+   
+   
+   async quickTestRoles(): Promise<void> {
+      console.log('🚀 Test rapido...');
+      const result = await this.authService.quickTest();
+      console.log('🎯 Risultato test:', result ? '✅ FUNZIONA' : '❌ NON FUNZIONA');
+    }
+  
+  
+  
 }

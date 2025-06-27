@@ -1,4 +1,3 @@
-// src/app/app.component.ts
 import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { RouterOutlet, RouterLink, Router } from '@angular/router';
@@ -10,8 +9,7 @@ import { Subscription } from 'rxjs';
   selector: 'app-root',
   standalone: true,
   imports: [CommonModule, RouterOutlet, RouterLink],
-  // src/app/app.component.ts - NAVBAR AGGIORNATA
-  // ... (mantieni tutto il codice esistente, solo il template cambia)
+  
 
     template: `
       <nav class="navbar">

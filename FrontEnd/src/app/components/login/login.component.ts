@@ -1,4 +1,3 @@
-// src/app/components/login/login.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -10,51 +9,39 @@ import { AuthService, LoginCredentials } from '../../services/auth.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div class="login-container">
-      <div class="login-card">
-        <h2>Accedi alla Biblioteca</h2>
+    <div class="container">
+      <div class="login-box">
+        <h1>Accedi alla Biblioteca</h1>
         
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
-          <div class="form-group">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          <div class="field">
             <label for="username">Username:</label>
             <input 
               type="text" 
               id="username" 
               formControlName="username"
-              class="form-control"
-              [class.is-invalid]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched"
-              placeholder="Inserisci username"
-            >
+              placeholder="Inserisci username">
             @if (loginForm.get('username')?.invalid && loginForm.get('username')?.touched) {
-              <div class="invalid-feedback">
-                Username richiesto
-              </div>
+              <div class="error-field">Username richiesto</div>
             }
           </div>
 
-          <div class="form-group">
+          <div class="field">
             <label for="password">Password:</label>
             <input 
               type="password" 
               id="password" 
               formControlName="password"
-              class="form-control"
-              [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
-              placeholder="Inserisci password"
-            >
+              placeholder="Inserisci password">
             @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
-              <div class="invalid-feedback">
-                Password richiesta
-              </div>
+              <div class="error-field">Password richiesta</div>
             }
           </div>
 
           <button 
             type="submit" 
-            class="btn btn-primary"
             [disabled]="loginForm.invalid || isLoading">
             @if (isLoading) {
-              <span class="spinner"></span>
               Accesso in corso...
             } @else {
               Accedi
@@ -62,154 +49,134 @@ import { AuthService, LoginCredentials } from '../../services/auth.service';
           </button>
 
           @if (errorMessage) {
-            <div class="alert alert-error">
-              {{ errorMessage }}
-            </div>
+            <div class="error">{{ errorMessage }}</div>
           }
         </form>
 
         <div class="register-link">
-          <p>Non hai un account? <a routerLink="/registrazione">Registrati qui</a></p>
+          <p>Non hai un account? <a href="/registrazione">Registrati qui</a></p>
         </div>
       </div>
     </div>
   `,
   styles: [`
-    .login-container {
+    .container {
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 80vh;
       padding: 20px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: Arial, sans-serif;
     }
     
-    .login-card {
+    .login-box {
       background: white;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      padding: 2.5rem;
+      border: 1px solid #ccc;
+      padding: 30px;
       width: 100%;
       max-width: 400px;
-      backdrop-filter: blur(10px);
     }
 
-    h2 {
+    h1 {
       text-align: center;
-      margin-bottom: 2rem;
+      margin: 0 0 30px 0;
+      font-size: 24px;
       color: #333;
-      font-weight: 600;
     }
     
-    .form-group {
-      margin-bottom: 1.5rem;
+    .field {
+      margin-bottom: 20px;
     }
     
     label {
       display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
+      margin-bottom: 5px;
+      font-weight: bold;
       color: #555;
     }
     
-    .form-control {
+    input {
       width: 100%;
-      padding: 0.875rem;
-      border: 2px solid #e1e5e9;
-      border-radius: 8px;
+      padding: 10px;
+      border: 1px solid #ccc;
       box-sizing: border-box;
-      font-size: 1rem;
-      transition: border-color 0.3s ease;
+      font-size: 14px;
     }
 
-    .form-control:focus {
+    input:focus {
       outline: none;
-      border-color: #007bff;
-      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+      border-color: #666;
     }
 
-    .form-control.is-invalid {
-      border-color: #dc3545;
-    }
-
-    .invalid-feedback {
-      display: block;
+    button {
       width: 100%;
-      margin-top: 0.25rem;
-      font-size: 0.875rem;
-      color: #dc3545;
-    }
-    
-    .btn {
-      width: 100%;
-      padding: 0.875rem;
-      border: none;
-      border-radius: 8px;
+      padding: 12px;
+      border: 1px solid #ccc;
+      background: white;
       cursor: pointer;
-      margin-top: 1rem;
-      font-size: 1rem;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
+      margin-top: 10px;
+      font-size: 16px;
+      font-weight: bold;
     }
     
-    .btn-primary {
-      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-      color: white;
+    button:hover:not(:disabled) {
+      background: #f0f0f0;
     }
 
-    .btn-primary:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
-    }
-
-    .btn:disabled {
+    button:disabled {
       opacity: 0.6;
       cursor: not-allowed;
-      transform: none !important;
+      background: #f8f8f8;
     }
 
-    .spinner {
-      width: 1rem;
-      height: 1rem;
-      border: 2px solid transparent;
-      border-top: 2px solid currentColor;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .error-field {
+      color: #d00;
+      font-size: 12px;
+      margin-top: 5px;
     }
     
-    .alert-error {
-      background-color: #f8d7da;
+    .error {
+      background: #f8d7da;
       color: #721c24;
-      padding: 0.75rem;
-      margin-top: 1rem;
-      border-radius: 8px;
+      padding: 10px;
+      margin-top: 15px;
       border: 1px solid #f5c6cb;
+      text-align: center;
     }
 
     .register-link {
       text-align: center;
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid #e1e5e9;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+
+    .register-link p {
+      margin: 0;
+      color: #666;
     }
 
     .register-link a {
-      color: #007bff;
-      text-decoration: none;
-      font-weight: 600;
+      color: #333;
+      text-decoration: underline;
     }
 
     .register-link a:hover {
-      text-decoration: underline;
+      color: #000;
+    }
+
+    @media (max-width: 500px) {
+      .container {
+        padding: 10px;
+      }
+
+      .login-box {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
     }
   `]
 })
@@ -232,13 +199,13 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Se l'utente è già loggato, redirect
+    // Se già loggato, redirect
     if (this.authService.isLoggedIn()) {
       this.router.navigate(['/home']);
       return;
     }
 
-    // Ottieni l'URL di ritorno dai query params
+    // URL di ritorno dai query params
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/home';
   }
 
@@ -254,8 +221,7 @@ export class LoginComponent implements OnInit {
           this.isLoading = false;
           
           if (success) {
-            console.log('Login riuscito!');
-            // Redirect all'URL originale o alla home
+            console.log('Login riuscito');
             this.router.navigateByUrl(this.returnUrl);
           } else {
             this.errorMessage = 'Username o password non corretti';
@@ -263,19 +229,19 @@ export class LoginComponent implements OnInit {
         },
         error: (error: any) => {
           this.isLoading = false;
-          console.error('Errore durante il login:', error);
+          console.error('Errore login:', error);
           
           if (error.status === 401) {
             this.errorMessage = 'Username o password non corretti';
           } else if (error.status === 0) {
-            this.errorMessage = 'Errore di connessione. Verifica che Keycloak sia attivo.';
+            this.errorMessage = 'Errore di connessione. Verifica che il sistema sia attivo.';
           } else {
             this.errorMessage = 'Errore durante il login. Riprova più tardi.';
           }
         }
       });
     } else {
-      // Marca tutti i campi come touched per mostrare gli errori
+      // mostra errori validazione
       Object.keys(this.loginForm.controls).forEach(key => {
         this.loginForm.get(key)?.markAsTouched();
       });

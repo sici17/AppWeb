@@ -1,4 +1,3 @@
-// src/app/services/api.service.ts - VERSIONE FINALE PULITA
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';

@@ -1,9 +1,8 @@
-// src/app/components/tessere/tessere.component.ts - VERSIONE CORRETTA COMPLETA
+// src/app/components/tessere/tessere.component.ts - DESIGN MINIMALE
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ApiService, TipologiaTessera, TesseraLibreria } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -12,180 +11,114 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="tessere-container">
-      <h2>Gestione Tessere Biblioteca</h2>
+    <div class="container">
+      <div class="header">
+        <h1>Gestione Tessere</h1>
+      </div>
 
-      <!-- Le mie tessere attive -->
+      <!-- Le mie tessere -->
       @if (mieTessere.length > 0) {
-        <div class="my-tessere-section">
-          <h3>🎫 Le tue Tessere Attive</h3>
-          <div class="tessere-grid">
-            @for (tessera of mieTessere; track tessera.id) {
-              <div class="tessera-card active">
-                <div class="tessera-header">
-                  <h4>{{ tessera.tipologia.nome }}</h4>
-                  <span class="status-badge" [class]="'status-' + tessera.stato.toLowerCase()">
-                    {{ tessera.stato }}
-                  </span>
-                </div>
-                
-                <div class="tessera-info">
-                  <p><strong>Numero:</strong> {{ tessera.numeroTessera }}</p>
-                  <p><strong>Emissione:</strong> {{ formatDate(tessera.dataEmissione) }}</p>
-                  <p><strong>Scadenza:</strong> {{ formatDate(tessera.dataScadenza) }}</p>
-                </div>
-
-                <div class="credits-section">
-                  <div class="credits-display">
-                    <span class="credits-number">{{ tessera.creditiRimanenti }}</span>
-                    <span class="credits-total">/ {{ tessera.tipologia.creditiMensili }}</span>
-                  </div>
-                  <p class="credits-label">Crediti Disponibili</p>
-                </div>
-
-                <div class="tessera-details">
-                  <p>📅 <strong>Durata prestiti:</strong> {{ tessera.tipologia.durataPrestitoGiorni }} giorni</p>
-                  <p>🔄 <strong>Max rinnovi:</strong> {{ tessera.tipologia.maxRinnovi }}</p>
-                  @if (tessera.tipologia.costoAnnuale > 0) {
-                    <p>💰 <strong>Costo annuo:</strong> €{{ tessera.tipologia.costoAnnuale }}</p>
-                  } @else {
-                    <p>🆓 <strong>Tessera Gratuita</strong></p>
-                  }
-                </div>
+        <div class="section">
+          <h2>Le tue Tessere</h2>
+          @for (tessera of mieTessere; track tessera.id) {
+            <div class="item">
+              <div>
+                <strong>{{ tessera.tipologia.nome }}</strong>
+                <br>Numero: {{ tessera.numeroTessera }}
+                <br>Scadenza: {{ formatDate(tessera.dataScadenza) }}
               </div>
-            }
-          </div>
+              
+              <div>
+                <span class="status-{{ tessera.stato.toLowerCase() }}">
+                  {{ tessera.stato }}
+                </span>
+                <br>{{ tessera.creditiRimanenti }}/{{ tessera.tipologia.creditiMensili }} crediti
+                @if (tessera.tipologia.costoAnnuale > 0) {
+                  <br>€{{ tessera.tipologia.costoAnnuale }}/anno
+                } @else {
+                  <br>Gratuita
+                }
+              </div>
+            </div>
+          }
         </div>
       }
 
-      <!-- Sezione per ottenere nuove tessere -->
-      <div class="available-tessere-section">
-        <h3>🆕 Richiedi Nuova Tessera</h3>
+      <!-- Richiedi nuova tessera -->
+      <div class="section">
+        <h2>Richiedi Nuova Tessera</h2>
         
         @if (isLoading) {
-          <div class="loading">Caricamento tipologie tessere...</div>
+          <p>Caricamento tipologie...</p>
         }
 
         @if (error) {
           <div class="error">{{ error }}</div>
         }
 
-        <div class="tipologie-grid">
-          @for (tipologia of tipologieTessere; track tipologia.id) {
-            <div class="tipologia-card" [class.featured]="tipologia.nome === 'Studente'">
-              <div class="tipologia-header">
-                <h4>{{ tipologia.nome }}</h4>
-                @if (tipologia.costoAnnuale === 0) {
-                  <span class="price-badge free">GRATUITA</span>
-                } @else {
-                  <span class="price-badge paid">€{{ tipologia.costoAnnuale }}/anno</span>
-                }
-              </div>
-
-              <div class="tipologia-features">
-                <div class="feature-highlight">
-                  <span class="feature-number">{{ tipologia.creditiMensili }}</span>
-                  <span class="feature-label">Prestiti/Mese</span>
-                </div>
-
-                <ul class="features-list">
-                  <li>📚 {{ tipologia.durataPrestitoGiorni }} giorni per prestito</li>
-                  <li>🔄 {{ tipologia.maxRinnovi }} rinnovi massimi</li>
-                  <li>📊 {{ tipologia.maxPrestitiContemporanei }} prestiti simultanei</li>
-                  @if (tipologia.multaGiornaliera > 0) {
-                    <li>⚠️ €{{ tipologia.multaGiornaliera }}/giorno multa ritardo</li>
-                  }
-                  @if (tipologia.rinnovoAutomatico) {
-                    <li>🔄 Rinnovo automatico crediti</li>
-                  }
-                </ul>
-
-                <!-- 🆕 NUOVA SEZIONE: Mostra informazioni autorizzazione -->
-                <div class="authorization-info">
-                  <div class="auth-badge">
-                    <span class="auth-icon">✅</span>
-                    <span class="auth-text">Disponibile per te</span>
-                  </div>
-                  <small class="auth-note">
-                    Stai vedendo solo le tessere che puoi richiedere
-                  </small>
-                </div>
-              </div>
-
+        @for (tipologia of tipologieTessere; track tipologia.id) {
+          <div class="item">
+            <div>
+              <strong>{{ tipologia.nome }}</strong>
               @if (tipologia.descrizione) {
-                <div class="tipologia-description">
-                  <p>{{ tipologia.descrizione }}</p>
-                </div>
+                <br>{{ tipologia.descrizione }}
               }
-
-              <div class="tipologia-actions">
-                @if (hasTesseraOfType(tipologia.id)) {
-                  <button class="btn btn-disabled" disabled>
-                    ✅ Già Posseduta
-                  </button>
-                } @else {
-                  <button 
-                    (click)="richiesTessera(tipologia)" 
-                    class="btn btn-primary"
-                    [disabled]="requestingTessera === tipologia.id">
-                    @if (requestingTessera === tipologia.id) {
-                      <span class="spinner"></span> Richiedendo...
-                    } @else {
-                      🎫 Richiedi Tessera
-                    }
-                  </button>
-                }
-              </div>
+              <br>{{ tipologia.creditiMensili }} prestiti/mese
             </div>
-          }
-        </div>
+            
+            <div>
+              @if (tipologia.costoAnnuale === 0) {
+                <span class="price-free">GRATUITA</span>
+              } @else {
+                <span class="price-paid">€{{ tipologia.costoAnnuale }}/anno</span>
+              }
+            </div>
+
+            <div>
+              @if (hasTesseraOfType(tipologia.id)) {
+                <button disabled>Già posseduta</button>
+              } @else {
+                <button 
+                  (click)="richiedeTessera(tipologia)" 
+                  [disabled]="requestingTessera === tipologia.id">
+                  @if (requestingTessera === tipologia.id) {
+                    Richiedendo...
+                  } @else {
+                    Richiedi
+                  }
+                </button>
+              }
+            </div>
+          </div>
+        }
       </div>
 
-      <!-- Modal di conferma richiesta tessera -->
+      <!-- Modal conferma -->
       @if (showConfirmModal && selectedTipologia) {
         <div class="modal-backdrop" (click)="closeConfirmModal()">
-          <div class="modal-content" (click)="$event.stopPropagation()">
-            <h3>Conferma Richiesta Tessera</h3>
+          <div class="modal" (click)="$event.stopPropagation()">
+            <h3>Conferma Richiesta</h3>
             
-            <div class="modal-body">
-              <div class="tessera-preview">
-                <h4>{{ selectedTipologia.nome }}</h4>
-                
-                @if (selectedTipologia.costoAnnuale > 0) {
-                  <div class="cost-info">
-                    <p><strong>💰 Costo:</strong> €{{ selectedTipologia.costoAnnuale }} all'anno</p>
-                    <p class="cost-note">Il pagamento sarà richiesto successivamente</p>
-                  </div>
-                } @else {
-                  <div class="free-info">
-                    <p>🆓 <strong>Tessera Gratuita</strong></p>
-                  </div>
-                }
-
-                <div class="benefits-summary">
-                  <h5>Benefici inclusi:</h5>
-                  <ul>
-                    <li>💳 {{ selectedTipologia.creditiMensili }} crediti prestito mensili</li>
-                    <li>📅 {{ selectedTipologia.durataPrestitoGiorni }} giorni durata prestiti</li>
-                    <li>📚 {{ selectedTipologia.maxPrestitiContemporanei }} prestiti simultanei</li>
-                    <li>🔄 Fino a {{ selectedTipologia.maxRinnovi }} rinnovi per prestito</li>
-                  </ul>
-                </div>
-              </div>
+            <div class="modal-info">
+              <p><strong>Tessera:</strong> {{ selectedTipologia.nome }}</p>
+              <p><strong>Crediti mensili:</strong> {{ selectedTipologia.creditiMensili }}</p>
+              @if (selectedTipologia.costoAnnuale > 0) {
+                <p><strong>Costo:</strong> €{{ selectedTipologia.costoAnnuale }}/anno</p>
+                <p><em>Il pagamento sarà richiesto successivamente</em></p>
+              } @else {
+                <p><strong>Costo:</strong> Gratuita</p>
+              }
             </div>
-
+            
             <div class="modal-actions">
-              <button (click)="closeConfirmModal()" class="btn btn-cancel">
-                Annulla
-              </button>
+              <button (click)="closeConfirmModal()">Annulla</button>
               <button 
                 (click)="confermaRichiestaTessera()" 
-                class="btn btn-confirm"
                 [disabled]="confirmingRequest">
                 @if (confirmingRequest) {
-                  <span class="spinner"></span> Confermando...
+                  Confermando...
                 } @else {
-                  ✅ Conferma Richiesta
+                  Conferma
                 }
               </button>
             </div>
@@ -193,495 +126,216 @@ import { AuthService } from '../../services/auth.service';
         </div>
       }
 
-      <!-- Messaggi di feedback -->
+      <!-- Feedback -->
       @if (feedbackMessage) {
-        <div class="feedback-message" [class]="feedbackType">
+        <div class="feedback" [class]="feedbackType">
           {{ feedbackMessage }}
         </div>
       }
     </div>
   `,
   styles: [`
-    .tessere-container {
-      max-width: 1200px;
+    .container {
+      max-width: 900px;
       margin: 0 auto;
       padding: 20px;
-      background-color: #f8f9fa;
-      min-height: 100vh;
+      font-family: Arial, sans-serif;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
     }
 
     h2 {
-      text-align: center;
-      color: #495057;
-      margin-bottom: 2rem;
+      font-size: 18px;
+      margin: 20px 0 10px 0;
     }
 
     h3 {
-      color: #495057;
-      margin-bottom: 1.5rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid #dee2e6;
+      margin: 0 0 15px 0;
+      text-align: center;
     }
 
-    .my-tessere-section {
-      background: white;
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    .section {
+      margin-bottom: 30px;
     }
 
-    .available-tessere-section {
-      background: white;
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .tessere-grid, .tipologie-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-      gap: 1.5rem;
-      margin-top: 1rem;
-    }
-
-    .tessera-card, .tipologia-card {
-      background: #f8f9fa;
-      border: 2px solid #dee2e6;
-      border-radius: 12px;
-      padding: 1.5rem;
-      transition: all 0.3s ease;
-    }
-
-    .tessera-card.active {
-      border-color: #28a745;
-      background: linear-gradient(135deg, #f8fff9 0%, #f1f8ff 100%);
-    }
-
-    .tipologia-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    }
-
-    .tipologia-card.featured {
-      border-color: #007bff;
-      background: linear-gradient(135deg, #f8fbff 0%, #fff8f1 100%);
-      position: relative;
-    }
-
-    .tipologia-card.featured::before {
-      content: "⭐ CONSIGLIATA";
-      position: absolute;
-      top: -10px;
-      left: 20px;
-      background: #007bff;
-      color: white;
-      padding: 0.25rem 0.75rem;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
-    .tessera-header, .tipologia-header {
+    .item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1rem;
-    }
-
-    .tessera-header h4, .tipologia-header h4 {
-      margin: 0;
-      color: #495057;
-      font-size: 1.25rem;
-    }
-
-    .status-badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .status-attiva { background-color: #d4edda; color: #155724; }
-    .status-scaduta { background-color: #f8d7da; color: #721c24; }
-    .status-sospesa { background-color: #fff3cd; color: #856404; }
-
-    .price-badge {
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-
-    .price-badge.free {
-      background: linear-gradient(135deg, #28a745, #20c997);
-      color: white;
-    }
-
-    .price-badge.paid {
-      background: linear-gradient(135deg, #ffc107, #fd7e14);
-      color: #212529;
-    }
-
-    .tessera-info p {
-      margin: 0.5rem 0;
-      color: #6c757d;
-      font-size: 0.9rem;
-    }
-
-    .credits-section {
-      text-align: center;
+      padding: 15px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
       background: white;
-      border-radius: 8px;
-      padding: 1rem;
-      margin: 1rem 0;
-      border: 2px solid #e9ecef;
     }
 
-    .credits-display {
-      font-size: 2rem;
-      font-weight: bold;
-      color: #007bff;
+    .item > div {
+      flex: 1;
+      padding: 0 10px;
     }
 
-    .credits-number {
-      color: #28a745;
+    .item > div:last-child {
+      text-align: right;
+      flex: 0;
     }
 
-    .credits-total {
-      color: #6c757d;
-    }
-
-    .credits-label {
-      margin: 0.5rem 0 0 0;
-      color: #6c757d;
-      font-size: 0.9rem;
-    }
-
-    .tessera-details {
+    button {
+      padding: 8px 12px;
+      border: 1px solid #ccc;
       background: white;
-      border-radius: 8px;
-      padding: 1rem;
-      margin-top: 1rem;
-    }
-
-    .tessera-details p {
-      margin: 0.5rem 0;
-      font-size: 0.85rem;
-      color: #495057;
-    }
-
-    .feature-highlight {
-      text-align: center;
-      background: linear-gradient(135deg, #007bff, #0056b3);
-      color: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .feature-number {
-      display: block;
-      font-size: 2.5rem;
-      font-weight: bold;
-    }
-
-    .feature-label {
-      font-size: 0.9rem;
-      opacity: 0.9;
-    }
-
-    .features-list {
-      list-style: none;
-      padding: 0;
-      margin: 1rem 0;
-    }
-
-    .features-list li {
-      padding: 0.5rem 0;
-      color: #495057;
-      font-size: 0.9rem;
-    }
-
-    /* 🆕 NUOVO: Stili per le informazioni di autorizzazione */
-    .authorization-info {
-      background: linear-gradient(135deg, #d4edda, #c3e6cb);
-      border-radius: 8px;
-      padding: 1rem;
-      margin-top: 1rem;
-      text-align: center;
-    }
-
-    .auth-badge {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .auth-icon {
-      font-size: 1.1rem;
-    }
-
-    .auth-text {
-      font-weight: 600;
-      color: #155724;
-    }
-
-    .auth-note {
-      color: #155724;
-      font-size: 0.8rem;
-      font-style: italic;
-      opacity: 0.8;
-    }
-
-    .tipologia-description {
-      background: #f8f9fa;
-      border-radius: 6px;
-      padding: 1rem;
-      margin: 1rem 0;
-    }
-
-    .tipologia-description p {
-      margin: 0;
-      color: #6c757d;
-      font-style: italic;
-    }
-
-    .tipologia-actions {
-      margin-top: 1.5rem;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 8px;
       cursor: pointer;
-      font-weight: 600;
-      font-size: 1rem;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
+      font-size: 14px;
     }
 
-    .btn-primary {
-      background: linear-gradient(135deg, #007bff, #0056b3);
-      color: white;
+    button:hover:not(:disabled) {
+      background: #f0f0f0;
     }
 
-    .btn-primary:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
-    }
-
-    .btn-disabled {
-      background-color: #6c757d;
-      color: white;
-      cursor: not-allowed;
+    button:disabled {
       opacity: 0.6;
-    }
-
-    .btn:disabled {
-      background-color: #6c757d;
       cursor: not-allowed;
-      transform: none;
+      background: #f8f8f8;
     }
 
-    .spinner {
-      width: 16px;
-      height: 16px;
-      border: 2px solid transparent;
-      border-top: 2px solid currentColor;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
+    .status-attiva { 
+      background: #d4f4dd; 
+      padding: 3px 6px; 
+      border-radius: 3px;
     }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .status-sospesa { 
+      background: #fff3cd; 
+      padding: 3px 6px; 
+      border-radius: 3px;
     }
 
-    .loading, .error {
-      text-align: center;
-      padding: 2rem;
-      border-radius: 8px;
-      margin: 1rem 0;
+    .status-scaduta { 
+      background: #f8d7da; 
+      padding: 3px 6px; 
+      border-radius: 3px;
     }
 
-    .loading {
-      background-color: #e3f2fd;
-      color: #1976d2;
+    .price-free {
+      background: #d4f4dd;
+      color: #2d5a3d;
+      padding: 3px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+    }
+
+    .price-paid {
+      background: #fff3cd;
+      color: #856404;
+      padding: 3px 6px;
+      border-radius: 3px;
+      font-weight: bold;
     }
 
     .error {
-      background-color: #ffebee;
-      color: #c62828;
+      background: #f8d7da;
+      color: #721c24;
+      padding: 10px;
+      border: 1px solid #f5c6cb;
+      margin: 10px 0;
+      text-align: center;
     }
 
-    /* Modal Styles */
+    /* Modal */
     .modal-backdrop {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.5);
       display: flex;
       justify-content: center;
       align-items: center;
       z-index: 1000;
     }
 
-    .modal-content {
+    .modal {
       background: white;
-      border-radius: 12px;
-      padding: 2rem;
+      border: 1px solid #ccc;
+      padding: 20px;
       max-width: 500px;
       width: 90%;
       max-height: 80vh;
       overflow-y: auto;
     }
 
-    .modal-content h3 {
-      margin: 0 0 1.5rem 0;
-      text-align: center;
-      color: #495057;
+    .modal-info {
+      margin-bottom: 15px;
+      padding: 10px;
+      background: #f8f8f8;
+      border: 1px solid #ddd;
     }
 
-    .tessera-preview {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .tessera-preview h4 {
-      margin: 0 0 1rem 0;
-      text-align: center;
-      color: #495057;
-    }
-
-    .cost-info, .free-info {
-      text-align: center;
-      padding: 1rem;
-      border-radius: 6px;
-      margin-bottom: 1rem;
-    }
-
-    .cost-info {
-      background-color: #fff3cd;
-      border: 1px solid #ffeaa7;
-    }
-
-    .free-info {
-      background-color: #d4edda;
-      border: 1px solid #c3e6cb;
-    }
-
-    .cost-note {
-      font-size: 0.85rem;
-      color: #856404;
-      margin: 0.5rem 0 0 0;
-    }
-
-    .benefits-summary h5 {
-      margin: 1rem 0 0.5rem 0;
-      color: #495057;
-    }
-
-    .benefits-summary ul {
-      margin: 0;
-      padding-left: 1.5rem;
-    }
-
-    .benefits-summary li {
-      margin: 0.5rem 0;
-      color: #495057;
+    .modal-info p {
+      margin: 5px 0;
     }
 
     .modal-actions {
       display: flex;
-      gap: 1rem;
+      gap: 10px;
       justify-content: flex-end;
-      margin-top: 2rem;
+      margin-top: 20px;
     }
 
-    .btn-cancel {
-      background-color: #6c757d;
-      color: white;
-      width: auto;
-      padding: 0.75rem 1.5rem;
-    }
-
-    .btn-cancel:hover {
-      background-color: #545b62;
-    }
-
-    .btn-confirm {
-      background: linear-gradient(135deg, #28a745, #20c997);
-      color: white;
-      width: auto;
-      padding: 0.75rem 1.5rem;
-    }
-
-    .btn-confirm:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
-    }
-
-    .feedback-message {
+    .feedback {
       position: fixed;
       top: 20px;
       right: 20px;
-      padding: 1rem 1.5rem;
-      border-radius: 8px;
-      font-weight: 600;
+      padding: 10px 15px;
+      border: 1px solid;
       z-index: 1001;
-      animation: slideIn 0.3s ease;
+      max-width: 300px;
     }
 
-    .feedback-message.success {
-      background-color: #d4edda;
+    .feedback.success {
+      background: #d4edda;
       color: #155724;
-      border: 1px solid #c3e6cb;
+      border-color: #c3e6cb;
     }
 
-    .feedback-message.error {
-      background-color: #f8d7da;
+    .feedback.error {
+      background: #f8d7da;
       color: #721c24;
-      border: 1px solid #f5c6cb;
+      border-color: #f5c6cb;
     }
 
-    @keyframes slideIn {
-      from { transform: translateX(100%); }
-      to { transform: translateX(0); }
-    }
-
-    @media (max-width: 768px) {
-      .tessere-container {
-        padding: 1rem;
+    @media (max-width: 600px) {
+      .item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
       }
 
-      .tessere-grid, .tipologie-grid {
-        grid-template-columns: 1fr;
+      .item > div {
+        text-align: left;
+        padding: 0;
       }
 
-      .modal-content {
-        margin: 1rem;
-        width: calc(100% - 2rem);
+      .item > div:last-child {
+        text-align: left;
+      }
+
+      .modal {
+        margin: 10px;
+        width: calc(100% - 20px);
       }
 
       .modal-actions {
         flex-direction: column;
-      }
-
-      .btn-cancel, .btn-confirm {
-        width: 100%;
       }
     }
   `]
@@ -706,8 +360,7 @@ export class TessereComponent implements OnInit {
   constructor(
     private apiService: ApiService,
     private authService: AuthService,
-    private router: Router,
-    private http: HttpClient
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -739,23 +392,16 @@ export class TessereComponent implements OnInit {
   private loadTipologieTessere(): void {
     this.isLoading = true;
     
-    // 🔄 USA ENDPOINT FILTRATO per ottenere solo le tipologie autorizzate
     this.apiService.getTipologieDisponibili().subscribe({
       next: (tipologie) => {
         this.tipologieTessere = tipologie.filter(t => t.attiva);
         this.isLoading = false;
-        console.log('Tipologie disponibili per questo utente:', tipologie.length);
-        
-        // Debug: mostra quali tipologie sono disponibili
-        tipologie.forEach(tip => {
-          console.log(`- ${tip.nome} (ID: ${tip.id})`);
-        });
+        console.log('Tipologie disponibili:', tipologie.length);
       },
       error: (error) => {
         console.error('Errore caricamento tipologie disponibili:', error);
         
-        // Fallback: usa l'endpoint pubblico se quello autenticato fallisce
-        console.log('Tentativo fallback con endpoint pubblico...');
+        // Fallback: usa l'endpoint pubblico
         this.apiService.getAllTipologie().subscribe({
           next: (tipologie) => {
             this.tipologieTessere = tipologie.filter(t => t.attiva);
@@ -773,15 +419,18 @@ export class TessereComponent implements OnInit {
   }
 
   formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('it-IT');
+    try {
+      return new Date(dateString).toLocaleDateString('it-IT');
+    } catch {
+      return 'N/A';
+    }
   }
 
   hasTesseraOfType(tipologiaId: number): boolean {
     return this.mieTessere.some(tessera => tessera.tipologia.id === tipologiaId);
   }
 
-  richiesTessera(tipologia: TipologiaTessera): void {
+  richiedeTessera(tipologia: TipologiaTessera): void {
     this.selectedTipologia = tipologia;
     this.showConfirmModal = true;
   }
@@ -791,24 +440,23 @@ export class TessereComponent implements OnInit {
     
     this.confirmingRequest = true;
     
-    // Chiedi note opzionali all'utente
-    const note = prompt('Note aggiuntive per la richiesta (opzionale):', '') || '';
+    const note = prompt('Note aggiuntive (opzionale):', '') || '';
     
     this.apiService.richiedeTessera(this.selectedTipologia.id, note).subscribe({
-      next: (response) => {
-        this.showFeedback('Richiesta tessera inviata! In attesa di approvazione dell\'amministratore.', 'success');
+      next: () => {
+        this.showFeedback('Richiesta tessera inviata! In attesa di approvazione.', 'success');
         this.closeConfirmModal();
-        this.loadMieTessere(); // Ricarica per vedere lo stato pending
+        this.loadMieTessere();
         this.confirmingRequest = false;
       },
       error: (error) => {
-        console.error('❌ Errore richiesta tessera:', error);
+        console.error('Errore richiesta tessera:', error);
         
         let errorMessage = 'Errore durante la richiesta';
         if (error.status === 409) {
-          errorMessage = 'Hai già una richiesta in corso o una tessera attiva di questo tipo';
+          errorMessage = 'Hai già una richiesta in corso o una tessera di questo tipo';
         } else if (error.status === 403) {
-          errorMessage = 'Non sei autorizzato a richiedere questa tessera';
+          errorMessage = 'Non autorizzato a richiedere questa tessera';
         }
         
         this.showFeedback(errorMessage, 'error');

@@ -1,4 +1,3 @@
-// src/app/components/dashboard/dashboard.component.ts - VERSIONE CORRETTA COMPLETA
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -10,406 +9,248 @@ import { ApiService, TesseraLibreria, Prestito } from '../../services/api.servic
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="dashboard-container">
-      <header class="dashboard-header">
-        <h1>Dashboard Biblioteca</h1>
-        <div class="user-info">
+    <div class="container">
+      <div class="header">
+        <h1>Dashboard</h1>
+        <div>
           @if (currentUser) {
-            <span>Benvenuto, {{ currentUser.given_name || currentUser.preferred_username }}!</span>
-            <button (click)="logout()" class="btn btn-outline">Logout</button>
+            <span>{{ currentUser.given_name || currentUser.preferred_username }}</span>
+            <button (click)="logout()">Logout</button>
           }
         </div>
-      </header>
+      </div>
 
       @if (loading) {
-        <div class="loading">Caricamento dati...</div>
+        <p>Caricamento...</p>
+      } @else {
+        <!-- Info Utente -->
+        @if (currentUser) {
+          <div class="section">
+            <h2>I tuoi dati</h2>
+            <div class="info">
+              <p><strong>Nome:</strong> {{ currentUser.given_name }} {{ currentUser.family_name }}</p>
+              <p><strong>Email:</strong> {{ currentUser.email }}</p>
+              <p><strong>Username:</strong> {{ currentUser.preferred_username }}</p>
+            </div>
+          </div>
+        }
+
+        <!-- Statistiche -->
+        <div class="stats">
+          <span>Crediti: {{ crediti !== null ? crediti : '...' }}</span>
+          <span>Prestiti attivi: {{ prestitiAttivi.length }}</span>
+          <span>Tessere: {{ tessereAttive.length }}</span>
+        </div>
+
+        <!-- Tessere Attive -->
+        @if (tessereAttive.length > 0) {
+          <div class="section">
+            <h2>Le tue Tessere</h2>
+            @for (tessera of tessereAttive; track tessera.id) {
+              <div class="item">
+                <div>
+                  <strong>{{ tessera.tipologia.nome }}</strong>
+                  <br>Numero: {{ tessera.numeroTessera }}
+                  <br>Scadenza: {{ formatDate(tessera.dataScadenza) }}
+                </div>
+                <div>
+                  <span class="status-{{ tessera.stato.toLowerCase() }}">
+                    {{ tessera.stato }}
+                  </span>
+                  <br>{{ tessera.creditiRimanenti }}/{{ tessera.tipologia.creditiMensili }} crediti
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Prestiti Attivi -->
+        @if (prestitiAttivi.length > 0) {
+          <div class="section">
+            <h2>I tuoi Prestiti</h2>
+            @for (prestito of prestitiAttivi; track prestito.id) {
+              <div class="item">
+                <div>
+                  <strong>{{ prestito.risorsa.titolo }}</strong>
+                  <br>Autore: {{ prestito.risorsa.autore }}
+                  <br>Tipo: {{ prestito.risorsa.tipo }}
+                </div>
+                <div>
+                  <span class="status-{{ prestito.stato.toLowerCase() }}">
+                    {{ prestito.stato }}
+                  </span>
+                  <br>Inizio: {{ formatDate(prestito.dataInizio) }}
+                  <br>Scadenza: {{ formatDate(prestito.dataScadenza) }}
+                  @if (prestito.multa > 0) {
+                    <br><strong>Multa: €{{ prestito.multa }}</strong>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Azioni -->
+        <div class="section">
+          <h2>Azioni</h2>
+          <div class="actions">
+            <button (click)="navigateTo('/risorse')">Catalogo</button>
+            <button (click)="navigateTo('/tessere')">Gestisci Tessere</button>
+            <button (click)="loadUserData()">Ricarica Dati</button>
+            @if (isAdmin) {
+              <button (click)="navigateTo('/admin-dashboard')">Admin</button>
+            }
+          </div>
+        </div>
       }
 
-      @if (currentUser && !loading) {
-        <div class="dashboard-content">
-          <!-- Informazioni utente base -->
-          <div class="user-card">
-            <h2>I tuoi dati</h2>
-            <p><strong>Nome:</strong> {{ currentUser.given_name }} {{ currentUser.family_name }}</p>
-            <p><strong>Email:</strong> {{ currentUser.email }}</p>
-            <p><strong>Username:</strong> {{ currentUser.preferred_username }}</p>
-          </div>
-
-          <!-- Statistiche reali -->
-          <div class="stats-grid">
-            <div class="stat-card">
-              <h3>Crediti Disponibili</h3>
-              @if (crediti !== null) {
-                <p class="stat-number">{{ crediti }}</p>
-                <p class="stat-label">crediti rimanenti</p>
-              } @else {
-                <p class="stat-loading">Caricamento...</p>
-              }
-            </div>
-
-            <div class="stat-card">
-              <h3>Prestiti Attivi</h3>
-              <p class="stat-number">{{ prestitiAttivi.length }}</p>
-              <p class="stat-label">prestiti in corso</p>
-            </div>
-
-            <div class="stat-card">
-              <h3>Tessere Attive</h3>
-              <p class="stat-number">{{ tessereAttive.length }}</p>
-              <p class="stat-label">tessere disponibili</p>
-            </div>
-          </div>
-
-          <!-- Dettagli Tessere -->
-          @if (tessereAttive.length > 0) {
-            <div class="details-section">
-              <h2>Le tue Tessere</h2>
-              <div class="tessere-list">
-                @for (tessera of tessereAttive; track tessera.id) {
-                  <div class="tessera-card">
-                    <h4>{{ tessera.tipologia.nome }}</h4>
-                    <p><strong>Numero:</strong> {{ tessera.numeroTessera }}</p>
-                    <p><strong>Crediti:</strong> {{ tessera.creditiRimanenti }}/{{ tessera.tipologia.creditiMensili }}</p>
-                    <p><strong>Scadenza:</strong> {{ formatDate(tessera.dataScadenza) }}</p>
-                    <span class="status" [class]="'status-' + tessera.stato.toLowerCase()">
-                      {{ tessera.stato }}
-                    </span>
-                  </div>
-                }
-              </div>
-            </div>
-          }
-
-          <!-- Dettagli Prestiti -->
-          @if (prestitiAttivi.length > 0) {
-            <div class="details-section">
-              <h2>I tuoi Prestiti Attivi</h2>
-              <div class="prestiti-list">
-                @for (prestito of prestitiAttivi; track prestito.id) {
-                  <div class="prestito-card">
-                    <h4>{{ prestito.risorsa.titolo }}</h4>
-                    <p><strong>Autore:</strong> {{ prestito.risorsa.autore }}</p>
-                    <p><strong>Tipo:</strong> {{ prestito.risorsa.tipo }}</p>
-                    <p><strong>Data inizio:</strong> {{ formatDate(prestito.dataInizio) }}</p>
-                    <p><strong>Scadenza:</strong> {{ formatDate(prestito.dataScadenza) }}</p>
-                    <span class="status" [class]="'status-' + prestito.stato.toLowerCase()">
-                      {{ prestito.stato }}
-                    </span>
-                    @if (prestito.multa > 0) {
-                      <p class="multa"><strong>Multa:</strong> €{{ prestito.multa }}</p>
-                    }
-                  </div>
-                }
-              </div>
-            </div>
-          }
-
-          <!-- Sezione azioni -->
-          <div class="actions-section">
-            <h2>Azioni Rapide</h2>
-            <div class="action-buttons">
-              <button (click)="navigateTo('/risorse')" class="btn btn-primary">
-                📚 Sfoglia Catalogo
-              </button>
-              <button (click)="navigateTo('/tessere')" class="btn btn-secondary">
-                🎫 Gestisci Tessere
-              </button>
-              <button (click)="loadUserData()" class="btn btn-secondary">
-                🔄 Ricarica Dati
-              </button>
-              @if (isAdmin) {
-                <button (click)="navigateTo('/admin-dashboard')" class="btn btn-admin">
-                  👑 Pannello Admin
-                </button>
-              }
-            </div>
-          </div>
-
-          @if (error) {
-            <div class="alert alert-error">
-              {{ error }}
-            </div>
-          }
-        </div>
+      @if (error) {
+        <div class="error">{{ error }}</div>
       }
     </div>
   `,
   styles: [`
-    .dashboard-container {
-      max-width: 1200px;
+    .container {
+      max-width: 900px;
       margin: 0 auto;
       padding: 20px;
-      background-color: #f8f9fa;
-      min-height: 100vh;
+      font-family: Arial, sans-serif;
     }
-    
-    .dashboard-header {
+
+    .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 2px solid #dee2e6;
-      background: white;
-      padding: 1.5rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .header div {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     h1 {
-      color: #495057;
       margin: 0;
-    }
-    
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
+      font-size: 24px;
     }
 
-    .user-info span {
-      font-weight: 600;
-      color: #495057;
-    }
-    
-    .loading {
-      text-align: center;
-      padding: 40px;
+    h2 {
       font-size: 18px;
-      color: #6c757d;
+      margin: 20px 0 10px 0;
     }
-    
-    .dashboard-content {
-      display: grid;
-      gap: 2rem;
-    }
-    
-    .user-card {
+
+    button {
+      padding: 8px 12px;
+      margin: 2px;
+      border: 1px solid #ccc;
       background: white;
-      border-radius: 8px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .user-card h2 {
-      margin-top: 0;
-      color: #495057;
-    }
-
-    .user-card p {
-      margin: 0.5rem 0;
-      color: #6c757d;
-    }
-    
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
-    }
-    
-    .stat-card {
-      background: white;
-      border-radius: 8px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      text-align: center;
-      border-top: 4px solid #007bff;
-    }
-
-    .stat-card h3 {
-      margin: 0 0 1rem 0;
-      color: #495057;
-      font-size: 1.1rem;
-    }
-    
-    .stat-number {
-      font-size: 2.5rem;
-      font-weight: bold;
-      color: #007bff;
-      margin: 0.5rem 0;
-    }
-
-    .stat-label {
-      color: #6c757d;
-      font-size: 0.9rem;
-      margin: 0;
-    }
-
-    .stat-loading {
-      color: #6c757d;
-      font-style: italic;
-    }
-
-    .details-section {
-      background: white;
-      border-radius: 8px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .details-section h2 {
-      margin-top: 0;
-      color: #495057;
-      border-bottom: 2px solid #e9ecef;
-      padding-bottom: 0.5rem;
-    }
-
-    .tessere-list, .prestiti-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-
-    .tessera-card, .prestito-card {
-      background: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-radius: 6px;
-      padding: 1rem;
-      position: relative;
-    }
-
-    .tessera-card h4, .prestito-card h4 {
-      margin: 0 0 0.5rem 0;
-      color: #495057;
-    }
-
-    .tessera-card p, .prestito-card p {
-      margin: 0.25rem 0;
-      font-size: 0.9rem;
-      color: #6c757d;
-    }
-
-    .status {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      padding: 0.25rem 0.5rem;
-      border-radius: 12px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .status-attiva, .status-attivo {
-      background-color: #d4edda;
-      color: #155724;
-    }
-
-    .status-scaduta, .status-scaduto {
-      background-color: #f8d7da;
-      color: #721c24;
-    }
-
-    .status-sospesa {
-      background-color: #fff3cd;
-      color: #856404;
-    }
-
-    .multa {
-      color: #dc3545 !important;
-      font-weight: 600;
-    }
-    
-    .actions-section {
-      background: white;
-      border-radius: 8px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .actions-section h2 {
-      margin-top: 0;
-      color: #495057;
-    }
-    
-    .action-buttons {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      margin-top: 1rem;
-    }
-    
-    .btn {
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 6px;
       cursor: pointer;
-      font-weight: 600;
-      text-decoration: none;
-      display: inline-flex;
+    }
+
+    button:hover {
+      background: #f0f0f0;
+    }
+
+    .stats {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 30px;
+      padding: 15px;
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+    }
+
+    .stats span {
+      font-weight: bold;
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    .info {
+      padding: 15px;
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+    }
+
+    .info p {
+      margin: 5px 0;
+    }
+
+    .item {
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 0.5rem;
-      transition: all 0.3s ease;
-    }
-    
-    .btn-primary {
-      background-color: #007bff;
-      color: white;
+      padding: 15px;
+      margin-bottom: 5px;
+      border: 1px solid #ddd;
+      background: white;
     }
 
-    .btn-primary:hover {
-      background-color: #0056b3;
-      transform: translateY(-1px);
-    }
-    
-    .btn-secondary {
-      background-color: #6c757d;
-      color: white;
+    .item > div {
+      flex: 1;
+      padding: 0 10px;
     }
 
-    .btn-secondary:hover {
-      background-color: #545b62;
-      transform: translateY(-1px);
-    }
-    
-    .btn-admin {
-      background-color: #dc3545;
-      color: white;
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
-    .btn-admin:hover {
-      background-color: #c82333;
-      transform: translateY(-1px);
-    }
-    
-    .btn-outline {
-      background-color: transparent;
-      color: #007bff;
-      border: 2px solid #007bff;
+    .status-attiva, .status-attivo { 
+      background: #d4f4dd; 
+      padding: 3px 6px; 
+      border-radius: 3px;
     }
 
-    .btn-outline:hover {
-      background-color: #007bff;
-      color: white;
+    .status-scaduta, .status-scaduto { 
+      background: #f8d7da; 
+      padding: 3px 6px; 
+      border-radius: 3px;
     }
-    
-    .alert {
-      padding: 1rem;
-      border-radius: 6px;
-      margin-top: 1rem;
+
+    .status-sospesa { 
+      background: #fff3cd; 
+      padding: 3px 6px; 
+      border-radius: 3px;
     }
-    
-    .alert-error {
-      background-color: #f8d7da;
+
+    .error {
+      background: #f8d7da;
       color: #721c24;
+      padding: 10px;
       border: 1px solid #f5c6cb;
+      margin: 10px 0;
     }
 
-    @media (max-width: 768px) {
-      .dashboard-header {
+    @media (max-width: 600px) {
+      .header {
         flex-direction: column;
-        gap: 1rem;
+        gap: 10px;
         text-align: center;
       }
 
-      .action-buttons {
+      .item {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .item > div {
+        padding: 5px 0;
+      }
+
+      .actions {
         flex-direction: column;
       }
 
-      .btn {
-        width: 100%;
-        justify-content: center;
+      .stats {
+        flex-direction: column;
+        gap: 10px;
       }
     }
   `]
@@ -449,37 +290,25 @@ export class DashboardComponent implements OnInit {
     
     // Carica crediti
     this.apiService.getUserCredits().subscribe({
-      next: (crediti) => {
-        this.crediti = crediti;
-        console.log('Crediti caricati:', crediti);
-      },
-      error: (error) => {
-        console.error('Errore caricamento crediti:', error);
-        this.crediti = 0;
-      }
+      next: (crediti) => this.crediti = crediti,
+      error: () => this.crediti = 0
     });
 
     // Carica tessere attive
     this.apiService.getUserTessere().subscribe({
       next: (tessere) => {
         this.tessereAttive = tessere.filter(t => t.stato === 'ATTIVA');
-        console.log('Tessere caricate:', tessere);
       },
-      error: (error) => {
-        console.error('Errore caricamento tessere:', error);
-        this.tessereAttive = [];
-      }
+      error: () => this.tessereAttive = []
     });
 
-    // Carica prestiti futuri/attivi
+    // Carica prestiti attivi
     this.apiService.getUserPrestitiFuturi().subscribe({
       next: (prestiti) => {
         this.prestitiAttivi = prestiti.filter(p => p.stato === 'ATTIVO');
-        console.log('Prestiti caricati:', prestiti);
         this.loading = false;
       },
-      error: (error) => {
-        console.error('Errore caricamento prestiti:', error);
+      error: () => {
         this.prestitiAttivi = [];
         this.loading = false;
       }
@@ -487,8 +316,11 @@ export class DashboardComponent implements OnInit {
   }
 
   formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('it-IT');
+    try {
+      return new Date(dateString).toLocaleDateString('it-IT');
+    } catch {
+      return 'N/A';
+    }
   }
 
   logout(): void {
