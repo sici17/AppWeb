@@ -1,0 +1,103 @@
+<!-- src/app/components/registration/registration.component.html -->
+<div class="registration-container">
+  <h2>Registrazione Utente</h2>
+  
+  <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()" class="registration-form">
+    <div class="form-group">
+      <label for="username">Username:</label>
+      <input 
+        type="text" 
+        id="username" 
+        formControlName="username"
+        class="form-control"
+        placeholder="Inserisci username"
+      >
+      <div *ngIf="registrationForm.get('username')?.invalid && registrationForm.get('username')?.touched" 
+           class="error-message">
+        Username richiesto (min 3 caratteri)
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="firstName">Nome:</label>
+      <input 
+        type="text" 
+        id="firstName" 
+        formControlName="firstName"
+        class="form-control"
+        placeholder="Inserisci nome"
+      >
+      <div *ngIf="registrationForm.get('firstName')?.invalid && registrationForm.get('firstName')?.touched" 
+           class="error-message">
+        Nome richiesto
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="lastName">Cognome:</label>
+      <input 
+        type="text" 
+        id="lastName" 
+        formControlName="lastName"
+        class="form-control"
+        placeholder="Inserisci cognome"
+      >
+      <div *ngIf="registrationForm.get('lastName')?.invalid && registrationForm.get('lastName')?.touched" 
+           class="error-message">
+        Cognome richiesto
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email:</label>
+      <input 
+        type="email" 
+        id="email" 
+        formControlName="email"
+        class="form-control"
+        placeholder="Inserisci email"
+      >
+      <div *ngIf="registrationForm.get('email')?.invalid && registrationForm.get('email')?.touched" 
+           class="error-message">
+        Email valida richiesta
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password:</label>
+      <input 
+        type="password" 
+        id="password" 
+        formControlName="password"
+        class="form-control"
+        placeholder="Inserisci password"
+      >
+      <div *ngIf="registrationForm.get('password')?.invalid && registrationForm.get('password')?.touched" 
+           class="error-message">
+        Password richiesta (min 6 caratteri)
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="sesso">Sesso:</label>
+      <select id="sesso" formControlName="sesso" class="form-control">
+        <option value="MASCHIO">Maschio</option>
+        <option value="FEMMINA">Femmina</option>
+        <option value="ALTRO">Altro</option>
+      </select>
+    </div>
+
+    <button type="submit" 
+            class="btn btn-primary" 
+            [disabled]="isLoading">
+      <span *ngIf="isLoading">Registrazione...</span>
+      <span *ngIf="!isLoading">Registrati</span>
+    </button>
+
+    <div *ngIf="message" 
+         class="message" 
+         [ngClass]="{'success': isSuccess, 'error': !isSuccess}">
+      {{ message }}
+    </div>
+  </form>
+</div>
