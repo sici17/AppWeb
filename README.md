@@ -1,14 +1,14 @@
-# 📚 LibSphere — Software Engineering Web Platform
+# 🌐 LibSphere — Web Applications Project
 
-A full-stack web application designed for library resource management, membership card issuing, loans tracking, and digital document export.
+A modern, full-stack web platform designed for library resource management, membership card issuing, digital loans tracking, and document processing.
 
-> **Academic Note:** Developed as part of the **3rd Year Software Engineering & Web Platforms Course** for the **Bachelor’s Degree in Computer Science**.
+> **Academic Note:** Developed as part of the **3rd Year Web Applications Course** for the **Bachelor’s Degree in Computer Science**.
 
 ---
 
 ## 📌 Project Overview
 
-**LibSphere (SE Web Platform)** is an enterprise-grade digital library management system. The platform offers a complete solution for digital loans, store catalog management, order processing, and user access control using modern web architecture (Angular Single Page Application + Spring Boot REST APIs + Keycloak IAM).
+**LibSphere (Web Applications Project)** is an enterprise-grade digital library web application. The platform provides a complete solution for library management, digital loans, store catalog management, order processing, and identity access control using a modern full-stack web architecture (Angular Single Page Application + Spring Boot REST APIs + Keycloak IAM).
 
 Additionally, it incorporates an extensible document processing engine (`textdoc`) demonstrating architectural design patterns (Composite, Visitor, Builder) for rendering documents into Plain Text, HTML, LaTeX, and JSON.
 
@@ -16,7 +16,7 @@ Additionally, it incorporates an extensible document processing engine (`textdoc
 
 ## ✨ Features
 
-- **User Authentication & Authorization (IAM):** Keycloak JWT-based OAuth2 authentication, dynamic user roles (Admin vs User), and secure route guards.
+- **User Authentication & Authorization (IAM):** Keycloak JWT-based OAuth2 authentication, dynamic user roles (Admin vs User), and secure Angular route guards.
 - **Library Resource & Loan Management:** Reserve resources, manage active loans, track return deadlines, and issue library membership cards (`TesseraLibreria`).
 - **Store & Cart Management:** Browse articles, manage persistent shopping carts, and execute order checkout workflows.
 - **Admin Dashboard:** Administrative controls for user management, resource catalog updates, and order/loan tracking.
@@ -110,4 +110,4 @@ ng serve
 
 ## 📄 License
 
-This project was developed for academic purposes as part of the **3rd Year Bachelor's Degree in Computer Science (Software Engineering & Web Platforms Course)**.
+This project was developed for academic purposes as part of the **3rd Year Bachelor's Degree in Computer Science (Web Applications Course)**.
